@@ -79,7 +79,7 @@ export function sendNewCampaign(values:any, header:any, body:any) {
     return async () => {
         dispatch(slice.actions.startLoading());
         try {
-            const response = await axios.post(URLConstants.SEND_CAMPAIGN_BASE_URL, {"campaignName":values.campaignName,"scheduleTime" : values.scheduleTime,"whatsAppBusinessId":values.whatsAppBusinessId, "phoneNumberId" : values.phoneNumberId,"messages" : messages
+            const response = await axios.post(URLConstants.SEND_CAMPAIGN_BASE_URL, {"campaignName":values.campaignName,"scheduleTime" : values.scheduleTime,"whatsAppBusinessId":values.whatsAppBusinessId, "phoneNumberId" : "","messages" : messages
         }
             );
             dispatch(slice.actions.sendCampaignSuccess(response.data.data));

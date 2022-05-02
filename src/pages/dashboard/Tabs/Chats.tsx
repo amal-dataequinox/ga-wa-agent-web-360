@@ -269,7 +269,7 @@ const Chats = (props: any) => {
                                 }
                             </DropdownMenu>
                         </Dropdown></Box>:null}
-                        <Button outline color="primary" onClick={toggleFilterModal} className='btn btn-outline-primary' style={{height:"40px",  minWidth: 100}}>Filter</Button>
+                        <Button outline color="primary" onClick={toggleFilterModal} className='btn btn-outline-primary' style={{height:"40px",  minWidth: 100}}> <i className="ri-filter-line font-size-18"></i></Button>
                     </Box>
                      <div className="search-box chat-search-box">
                         <InputGroup size="lg" className="mb-3 rounded-lg">

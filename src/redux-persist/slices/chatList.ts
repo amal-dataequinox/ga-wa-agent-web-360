@@ -114,15 +114,13 @@ export function getRecentChats(whatsAppBusinessId:string,option:any,status:any,c
       if(status=="" || status=="ALL"){
           status=null
       }
-      if(option==""){
-        option="All"
+      if(option=="All"){
+        option=""
     }
     if(tags.length==0){
-        tags=null
+        tags=[]
     }
-    if(contact==""){
-        contact=null
-    }
+  
     var body = {
         "whatsAppBusinessId": whatsAppBusinessId,
         "option": option,

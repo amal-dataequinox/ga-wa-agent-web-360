@@ -2,7 +2,7 @@ export type CreateWBAccount = {
     whatsAppBusinessId: string;
     accountId: string;
     displayName: string;
-    businessAccountId: string;
+    nameSpace: string;
     apiKey: string;
     status: string;
     createTime: Date;
@@ -31,3 +31,13 @@ export type TeamID = {
     teamId: string;
 }
 
+export type UpdateWBAccount = {
+    whatsAppBusinessId: string;
+    accountId: string;
+    displayName: string;
+    nameSpace: string;
+    apiKey: string;
+    status: string;
+    createTime: Date;
+    updateTime: Date;
+}

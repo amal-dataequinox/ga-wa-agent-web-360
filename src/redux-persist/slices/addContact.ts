@@ -16,6 +16,10 @@ type AddContactValues={
     contactPhoneNumber: string,
 }
 
+type ValidateContactNumber={
+    contacts: string[];
+}
+
 
 type FileUploadData = {
     FirstName: string;
@@ -23,11 +27,19 @@ type FileUploadData = {
     Email: string;
     MobileNumber: string;
 };
+
+type ValidateContactType = {
+    valid: string[];
+    invalid: any[];
+}
+
 type AddContactState = {
     isLoading: boolean;
     error: boolean;
     addContact: AddContactResponse;
+    validateContact: ValidateContactType;
 }
+
 
 const initialState: AddContactState = {
     isLoading: false,
@@ -35,6 +47,7 @@ const initialState: AddContactState = {
     addContact: {
         count:0
     },
+    validateContact:{} as ValidateContactType
 }
 
 const slice = createSlice({
@@ -56,6 +69,12 @@ const slice = createSlice({
         addContactSuccess(state, action) {
             state.isLoading = false;
             state.addContact = action.payload;
+        },
+
+        // VALIDATE CONTACT
+        validateContactSuccess(state, action) {
+            state.isLoading = false;
+            state.validateContact = action.payload;
         },
     }
 });
@@ -92,6 +111,22 @@ export function addNewContact(values:AddContactValues) {
                     [contactdetails]);
                 dispatch(slice.actions.addContactSuccess(response.data.data));
             } catch (error:any) {
+                dispatch(slice.actions.hasError(error));
+                return {message : error?.message, hasError : true} 
+            }
+        };
+    
+  }
+
+  export function validateContactNumber(values:ValidateContactNumber) {
+        return async () => {
+            dispatch(slice.actions.startLoading());
+            try {
+                const response = await axios.post(URLConstants.VALIDATE_CONTACT_BASE_URL,
+                    {'contacts' :[values]});
+                dispatch(slice.actions.validateContactSuccess(response.data.data));
+                return response.data.data
+            } catch (error :any) {
                 dispatch(slice.actions.hasError(error));
                 return {message : error?.message, hasError : true} 
             }

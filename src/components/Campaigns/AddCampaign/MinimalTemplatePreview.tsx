@@ -1,8 +1,8 @@
 import { Card, Box, Typography } from "@material-ui/core"
-import { Component, Template } from "../../../@types/getTemplatesType"
+import { Component, WabaTemplate } from "../../../@types/getTemplatesType"
 
 type MinimalTemplatePreviewTypes = {
-    template: Template;
+    template: WabaTemplate;
     fullPreview?: boolean;
 }
 

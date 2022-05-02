@@ -23,7 +23,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import api from "../../../assets/images/api.svg"
 import Multiselect from 'multiselect-react-dropdown';
-import { createNewWBAccount } from '../../../redux-persist/slices/createWBAccount';
+import { createNewWBAccount, updateWBAccountDetails } from '../../../redux-persist/slices/createWBAccount';
 import { getAllTeam } from '../../../redux-persist/slices/teamsOfAccount';
 import { createNewTeam } from '../../../redux-persist/slices/createTeam';
 import { getAllUserOfATeam } from '../../../redux-persist/slices/usersOfTeam';
@@ -43,6 +43,8 @@ function Settings(props: any) {
     const [addUserToTeamModal, setAddUserToTeamModal] = useState(false);
     const [addUserFlag, setAddUserFlag] = useState(false);
     const [webhookModal, setWebhookModal] = useState(false);
+    const [updateWBAModal, setUpdateWBAModal] = useState(false);
+    const [whatsAppBusinessId,setWhatsAppBusinessId] = useState("");
  
 
     const dispatch = useDispatch();
@@ -142,6 +144,17 @@ function Settings(props: any) {
         setPhone("")
     }
     
+    const toggleUpdateWBA = () => {
+        setUpdateWBAModal(!updateWBAModal)
+    }
+
+    const getWAId = (value:any) => {
+        formikUpdateApiSettings.values.displayName=value.displayName;
+        formikUpdateApiSettings.values.nameSpace=value.nameSpace;
+        formikUpdateApiSettings.values.serverKey=value.apiKey;
+        setWhatsAppBusinessId(value.whatsAppBusinessId);
+    }
+
     const toggleWebhook = (value:any) => {
         setWebhookModal(!webhookModal);
         setWebhookUrl(value.webhookCallbackURL);
@@ -158,7 +171,7 @@ function Settings(props: any) {
         formikApiSettings.values.displayName="";
         formikApiSettings.values.serverKey="";
         formikApiSettings.values.teams=[];
-        formikApiSettings.values.whatsappBusinessAccountId="";
+        formikApiSettings.values.nameSpace="";
     }
 
     const toggleUserOfTeam = () => {
@@ -277,21 +290,55 @@ function Settings(props: any) {
     const formikApiSettings = useFormik({
         initialValues: {
             displayName: '',
-            whatsappBusinessAccountId: '',
+            nameSpace: '',
             serverKey: '',
             teams: [],
         },
         validationSchema: Yup.object({
             displayName: Yup.string().required('Display name required'),
-            whatsappBusinessAccountId: Yup.string().required('Whatsapp business accountId required'),
+            nameSpace: Yup.string().required('NameSpace required'),
             serverKey: Yup.string().required('Server key Required'),
             teams: Yup.array().required('Teams Required'),
         }),
-        onSubmit: async (values) =>{
-       await dispatch(createNewWBAccount(values));
-        toggleConfig();
-        updateApiSettings();
-        formikApiSettings.resetForm();
+        onSubmit: async (values) => {
+            let res = await dispatch(createNewWBAccount(values));
+            if (res?.hasError) {
+                enqueueSnackbar(res?.message, { variant: "error" });
+            }
+            else {
+                enqueueSnackbar("New whatsApp business account added", { variant: "success" });
+                toggleConfig();
+                updateApiSettings();
+                formikApiSettings.resetForm();
+            }
+
+        }
+        
+    });
+
+    const formikUpdateApiSettings = useFormik({
+        initialValues: {
+            displayName: '',
+            nameSpace: '',
+            serverKey: '',
+        },
+        validationSchema: Yup.object({
+            displayName: Yup.string().required('Display name required'),
+            nameSpace: Yup.string().required('NameSpace required'),
+            serverKey: Yup.string().required('Server key Required'),
+        }),
+        onSubmit: async (values) => {
+            let res = await dispatch(updateWBAccountDetails(whatsAppBusinessId,values));
+            if (res?.hasError) {
+                enqueueSnackbar(res?.message, { variant: "error" });
+            }
+            else {
+                enqueueSnackbar("Updated", { variant: "success" });
+                setUpdateWBAModal(!updateWBAModal)
+                updateApiSettings();
+                formikUpdateApiSettings.resetForm();
+            }
+
         }
         
     });
@@ -886,10 +933,11 @@ function Settings(props: any) {
                                         <div className='col-lg-6 center '>
 
                                             <div className='pt-20'>
-                                                <Table responsive striped bordered hover>
+                                                <Table responsive bordered hover>
                                                     <thead>
                                                         <tr>
-                                                            <th> Whatsapp Business Account Id</th>
+                                                            <th></th>
+                                                            <th> Whatsapp Business Id</th>
                                                             <th>Display Name</th>
                                                             <th>Webhook</th>
                                                         </tr>
@@ -897,7 +945,8 @@ function Settings(props: any) {
                                                     <tbody>
                                                         {getWBAccount.map((row) => (
                                                             <tr key={row.whatsAppBusinessId}>
-                                                                <td style={{verticalAlign:"middle"}}>{row.businessAccountId}</td>
+                                                                <td><i onClick={()=>(toggleUpdateWBA(),getWAId(row))} className="ri-edit-box-line pointer"></i></td>
+                                                                <td style={{verticalAlign:"middle"}}>{row.whatsAppBusinessId}</td>
                                                                 <td style={{verticalAlign:"middle"}}>{row.displayName}</td>
                                                                 <td> <Button color="light" onClick={()=>toggleWebhook(row)} block outline className="waves-effect waves-light" >{t('Configure')}</Button></td>
                                                             </tr>))}
@@ -1195,24 +1244,24 @@ function Settings(props: any) {
                                         </InputGroup>
                                     </div>
                                     <div className="mb-3">
-                                        <Label className="form-label">{t('Whatsapp Business Account Id')}</Label>
+                                        <Label className="form-label">{t('Name space')}</Label>
                                         <InputGroup className="input-group bg-soft-light rounded-3 mb-3">
                                             <span className="input-group-text text-muted">
                                                 <i className="ri-user-2-line"></i>
                                             </span>
                                             <Input
                                                 type="text"
-                                                id="whatsappBusinessAccountId"
-                                                name="whatsappBusinessAccountId"
+                                                id="nameSpace"
+                                                name="nameSpace"
                                                 className="form-control form-control-lg bg-soft-light border-light"
-                                                placeholder="Enter your Whatsapp Business Account Id"
+                                                placeholder="Enter your Name space"
                                                 onChange={formikApiSettings.handleChange}
                                                 onBlur={formikApiSettings.handleBlur}
-                                                value={formikApiSettings.values.whatsappBusinessAccountId}
-                                                invalid={formikApiSettings.touched.whatsappBusinessAccountId && formikApiSettings.errors.whatsappBusinessAccountId ? true : false}
+                                                value={formikApiSettings.values.nameSpace}
+                                                invalid={formikApiSettings.touched.nameSpace && formikApiSettings.errors.nameSpace ? true : false}
                                             />
-                                            {formikApiSettings.touched.whatsappBusinessAccountId && formikApiSettings.errors.whatsappBusinessAccountId ? (
-                                                <FormFeedback type="invalid">{formikApiSettings.errors.whatsappBusinessAccountId}</FormFeedback>
+                                            {formikApiSettings.touched.nameSpace && formikApiSettings.errors.nameSpace ? (
+                                                <FormFeedback type="invalid">{formikApiSettings.errors.nameSpace}</FormFeedback>
                                             ) : null}
                                         </InputGroup>
                                     </div>
@@ -1506,6 +1555,101 @@ function Settings(props: any) {
                                 </Form>
                             </div>
                             <h6 style={{textAlign:"center"}}>Copy this values to configure webhook in Meta app dashboard</h6>
+                        </CardBody>
+                    </Card>
+                </ModalBody>
+                {/* <ModalFooter>
+                    <Button type="button" color="link" onClick={toggleAddUser}>Close</Button>
+                    <Button  color="primary"  type="submit" onClick={={}}>Add User</Button>
+                </ModalFooter> */}
+            </Modal>
+
+              {/* Start WBA update modal */}
+            <Modal isOpen={updateWBAModal} centered toggle={toggleUpdateWBA}>
+                <ModalHeader tag="h5" className="font-size-16" toggle={toggleUpdateWBA}>
+                    {t('Update Whatsapp business account')}
+                </ModalHeader>
+                <ModalBody className="p-4">
+                    <Card>
+                        <CardBody className="p-4">
+                            <div className="p-3">
+                                <Form onSubmit={formikUpdateApiSettings.handleSubmit}>
+                                    <div className="mb-3">
+
+                                        <Label className="form-label">{t('Display Name')}</Label>
+                                        <InputGroup className="input-group bg-soft-light rounded-3 mb-3">
+                                            <span className="input-group-text text-muted">
+                                                <i className="ri-user-2-line"></i>
+                                            </span>
+                                            <Input
+                                                type="text"
+                                                id="displayName"
+                                                name="displayName"
+                                                className="form-control form-control-lg bg-soft-light border-light"
+                                                placeholder="Enter Display Name"
+                                                onChange={formikUpdateApiSettings.handleChange}
+                                                onBlur={formikUpdateApiSettings.handleBlur}
+                                                value={formikUpdateApiSettings.values.displayName}
+                                                invalid={formikUpdateApiSettings.touched.displayName && formikUpdateApiSettings.errors.displayName ? true : false}
+                                            />
+                                            {formikUpdateApiSettings.touched.displayName && formikUpdateApiSettings.errors.displayName ? (
+                                                <FormFeedback type="invalid">{formikUpdateApiSettings.errors.displayName}</FormFeedback>
+                                            ) : null}
+                                        </InputGroup>
+                                    </div>
+                                    <div className="mb-3">
+                                        <Label className="form-label">{t('Name space')}</Label>
+                                        <InputGroup className="input-group bg-soft-light rounded-3 mb-3">
+                                            <span className="input-group-text text-muted">
+                                                <i className="ri-user-2-line"></i>
+                                            </span>
+                                            <Input
+                                                type="text"
+                                                id="nameSpace"
+                                                name="nameSpace"
+                                                className="form-control form-control-lg bg-soft-light border-light"
+                                                placeholder="Enter your Name space"
+                                                onChange={formikUpdateApiSettings.handleChange}
+                                                onBlur={formikUpdateApiSettings.handleBlur}
+                                                value={formikUpdateApiSettings.values.nameSpace}
+                                                invalid={formikUpdateApiSettings.touched.nameSpace && formikUpdateApiSettings.errors.nameSpace ? true : false}
+                                            />
+                                            {formikUpdateApiSettings.touched.nameSpace && formikUpdateApiSettings.errors.nameSpace ? (
+                                                <FormFeedback type="invalid">{formikUpdateApiSettings.errors.nameSpace}</FormFeedback>
+                                            ) : null}
+                                        </InputGroup>
+                                    </div>
+
+
+
+                                    <div className="mb-4">
+                                        <Label className="form-label">{t('Server Key')}</Label>
+                                        <InputGroup className="mb-3 bg-soft-light input-group-lg rounded-lg">
+                                            <span className="input-group-text border-light text-muted">
+                                                <i className="ri-user-2-line"></i>
+                                            </span>
+                                            <Input
+                                                type="text"
+                                                id="serverKey"
+                                                name="serverKey"
+                                                className="form-control form-control-lg bg-soft-light border-light"
+                                                placeholder="Enter server key"
+                                                onChange={formikUpdateApiSettings.handleChange}
+                                                onBlur={formikUpdateApiSettings.handleBlur}
+                                                value={formikUpdateApiSettings.values.serverKey}
+                                                invalid={formikUpdateApiSettings.touched.serverKey && formikUpdateApiSettings.errors.serverKey ? true : false}
+                                            />
+                                            {formikUpdateApiSettings.touched.serverKey && formikUpdateApiSettings.errors.serverKey ? (
+                                                <FormFeedback type="invalid">{formikUpdateApiSettings.errors.serverKey}</FormFeedback>
+                                            ) : null}
+                                        </InputGroup>
+                                    </div>
+                                    <div className="center">
+                                        <Button color="primary" block className="waves-effect waves-light" type="submit">Update</Button>
+                                    </div>
+
+                                </Form>
+                            </div>
                         </CardBody>
                     </Card>
                 </ModalBody>

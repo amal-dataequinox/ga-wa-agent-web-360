@@ -8,7 +8,7 @@ export type CampaignType = {
     campaignName: string;
     scheduleTime: string;
     templateName: string;
-    templateId: string;
+   // templateId: string;
     language : string;
     toContacts: Array<string> | null;
     from: string;
@@ -61,7 +61,7 @@ export function getCampaignName(values: any) {
         dispatch(slice.actions.startLoading());
         try {
             const response = {
-                "campaignName": values.campaignName, "scheduleTime": values.scheduleTime, "templateId": values.templateId, "templateName": values.templateName,"language" : values.language, "toContacts": values.toContacts,
+                "campaignName": values.campaignName, "scheduleTime": values.scheduleTime,"templateName": values.templateName,"language" : values.language, "toContacts": values.toContacts,
                 "from": values.from, "whatsAppBusinessId": values.whatsAppBusinessId, "phoneNumberId": values.phoneNumberId, "variables": values.variables
             };
             dispatch(slice.actions.getCampaignDataSuccess(response));

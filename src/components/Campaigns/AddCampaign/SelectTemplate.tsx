@@ -1,4 +1,4 @@
-import { GetTemplatesType, Template } from "../../../@types/getTemplatesType"
+import { GetTemplatesType, WabaTemplate } from "../../../@types/getTemplatesType"
 import { Grid, Box, Divider } from "@material-ui/core";
 import { Modal, ModalHeader, ModalBody, Table, Form, Input, Label, ModalFooter, Button } from "reactstrap";
 import { useState } from "react"
@@ -6,10 +6,10 @@ import MinimalTemplatePreview from "./MinimalTemplatePreview";
 import { RootState, useDispatch, useSelector } from "../../../redux-persist/store";
 import { getCampaignName } from "../../../redux-persist/slices/campaignData";
 type SelectTemplateProps = {
-    templates: GetTemplatesType[];
-    templateData: Template | undefined;
-    setTemplateData: (data: Template) => void;
-    setTemplateCurrData: (data: Template) => void;
+    templates: GetTemplatesType;
+    templateData: WabaTemplate | undefined;
+    setTemplateData: (data: WabaTemplate) => void;
+    setTemplateCurrData: (data: WabaTemplate) => void;
     setActiveStep: (num: number) => void;
     activeStep: number;
 }
@@ -20,8 +20,12 @@ export const SelectTemplate =  ({ templates, templateData, setTemplateData, setA
     const { campaignData } = useSelector(
         (state: RootState) => state.campaignData
     );
-    const selectedTemplateData=(template : Template,whatsAppBusinessId:string)=>{
-        let values={"campaignName":campaignData.campaignName,"scheduleTime": campaignData.scheduleTime,"templateId":template.id,"templateName" : template.name,"language":template.language,"whatsAppBusinessId":whatsAppBusinessId}
+    const { getWBAccount } = useSelector(
+        (state: RootState) => state.getWBAccount
+    );
+    
+    const selectedTemplateData=(template : WabaTemplate)=>{
+        let values={"campaignName":campaignData.campaignName,"scheduleTime": campaignData.scheduleTime,"templateName" : template.name,"language":template.language,"whatsAppBusinessId":getWBAccount[0].whatsAppBusinessId}
         dispatch(getCampaignName(values)); 
     }
     
@@ -35,32 +39,33 @@ export const SelectTemplate =  ({ templates, templateData, setTemplateData, setA
          <Grid mb={5} mx={'auto'} display="block" mt={5} >
         <Box    maxHeight={550} margin={"auto"} overflow="auto">
             <div className='pt-20'>
-                {templates.length >= 1 && templates.map((row) => (
-                    <div key={row.whatsAppBusinessId}><h6>{row.displayName}</h6>
-                        <Table responsive striped bordered hover >
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Language</th>
-                                    <th>Status</th>
-                                    <th>Category</th>
+                    <Table responsive striped bordered hover >
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Language</th>
+                                <th>Status</th>
+                                <th>Category</th>
 
 
+                            </tr>
+                        </thead>
+
+                        <tbody >
+                            {templates.waba_templates?.map((template, index) => (
+                                <tr key={index} onClick={() => {selectedTemplateData(template); setTemplateData(template); setTemplateCurrData(template); showModal() }} style={{ cursor: 'pointer' }}>
+                                    <td>{index}</td>
+                                    <td >{template.name} </td>
+                                    <td>{template.language} </td>
+                                    <td>{template.status}</td>
+                                    <td>{template.category}</td>
                                 </tr>
-                            </thead>
+                            ))}
+                        </tbody>
 
-                            <tbody>
-                                {row.templates.map(template => (
-                                    <tr key={template.id} style={{ cursor: 'pointer' }} onClick={() => {selectedTemplateData(template,row.whatsAppBusinessId); setTemplateData(template); setTemplateCurrData(template); showModal() }}>
-                                        <td>{template.id}</td>
-                                        <td >{template.name} </td>
-                                        <td>{template.language} </td>
-                                        <td>{template.status}</td>
-                                        <td>{template.category}</td>
-                                    </tr>))}
-                            </tbody>
-                        </Table></div>))}
+                    </Table>
             </div>
         </Box>
         </Grid>

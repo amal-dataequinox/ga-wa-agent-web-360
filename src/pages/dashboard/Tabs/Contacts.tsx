@@ -28,6 +28,7 @@ import { getAllContacts, searchContacts } from "../../../redux-persist/slices/al
 import {
   addNewContact,
   addNewContactFromFile,
+  validateContactNumber,
 } from "../../../redux-persist/slices/addContact";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -76,7 +77,7 @@ const Contacts = (props: any) => {
   const dispatch = useDispatch();
   const [addContactFlag, setAddContactFlag] = useState(false);
 
-  const { addContact } = useSelector((state: RootState) => state.addContact);
+  const { addContact,validateContact } = useSelector((state: RootState) => state.addContact);
 
   const { allContacts } = useSelector((state: RootState) => state.allContacts);
     const {setActiveTab} = props;
@@ -187,12 +188,24 @@ const Contacts = (props: any) => {
   });
   const { enqueueSnackbar } = useSnackbar();
   const submitContacts = async (values: any) => {
-    const res = await dispatch(addNewContact(values));
-    if (res?.hasError) {
-      enqueueSnackbar(res?.message, { variant: "error" });
-    } else {
-      toggleAddContactModal();
-      updateContactList();
+    const response = await dispatch(validateContactNumber(values.contactPhoneNumber));
+    if (response?.hasError) {
+      enqueueSnackbar(response?.message, { variant: "error" });
+    }
+    else {
+    
+      if (response?.invalid?.length > 0) {
+        enqueueSnackbar("Invalid mobile number", { variant: "error" });
+      }
+      else {
+        const res = await dispatch(addNewContact(values));
+        if (res?.hasError) {
+          enqueueSnackbar(res?.message, { variant: "error" });
+        } else {
+          toggleAddContactModal();
+          updateContactList();
+        }
+      }
     }
   };
 

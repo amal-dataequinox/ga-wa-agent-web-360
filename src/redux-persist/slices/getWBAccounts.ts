@@ -20,7 +20,7 @@ const initialState: GetWBAccountState = {
         'whatsAppBusinessId': '',
         'accountId': '',
         'displayName': '',
-        'businessAccountId': '',
+        'nameSpace': '',
         'apiKey': '',
         'status': '',
         'createTime': new Date(),

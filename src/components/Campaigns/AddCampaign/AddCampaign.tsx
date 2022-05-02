@@ -1,21 +1,21 @@
 
 import { Step, Stepper, StepLabel, Box, useMediaQuery , Grid} from "@material-ui/core";
 import { useState } from "react";
-import { GetTemplatesType, Template } from "../../../@types/getTemplatesType";
+import { GetTemplatesType, WabaTemplate } from "../../../@types/getTemplatesType";
 import {AddContacts,CampaignInfo,SelectTemplate,CreateMessage,PreviewPage} from "./"
 
 
 
 const labels = ['Enter Campaign Information', 'Select Template', 'Choose Audience',  'Create Message', 'Preview page']
 type AddCampaignProps = {
-    templates: GetTemplatesType[],
+    templates: GetTemplatesType,
     showBroadcastSection : () => void;
 }
 export const AddCampaign = (props: AddCampaignProps) => {
     const { templates,showBroadcastSection } = props;
     const isMobile = useMediaQuery('(max-width:600px)');
-    const [templateData, setTemplateData] = useState<Template>();
-    const [templateCurrData, setTemplateCurrData] = useState<Template>();
+    const [templateData, setTemplateData] = useState<WabaTemplate>();
+    const [templateCurrData, setTemplateCurrData] = useState<WabaTemplate>();
     const [activeStep, setActiveStep] = useState(0);
     const [headerVariableValues, setHeaderVariableValues] = useState<any>({});
     const [bodyVariableValues, setBodyVariableValues] = useState<any>({});

@@ -79,7 +79,7 @@ export function getAllTagsOfAConversation(conversationId:string) {
         return async () => {
             dispatch(slice.actions.startLoading());
             try {
-                const response = await axios.get(`https://1crpomkpe9.execute-api.ap-south-1.amazonaws.com/prod/gcns/account/conversation/tag/fetch`,{params});
+                const response = await axios.get(URLConstants.CONVERSATION_TAGS_BASE_URL,{params});
                 dispatch(slice.actions.getConversationTagSuccess(response.data.data));
                 return response.data.data;
             } catch (error:any) {

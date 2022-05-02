@@ -2,7 +2,7 @@ import { Box, Divider, Grid, Typography } from "@material-ui/core";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { Form, Input, Label, Button, FormFeedback } from "reactstrap";
-import { Component, Template } from "../../../@types/getTemplatesType"
+import { Component, WabaTemplate } from "../../../@types/getTemplatesType"
 import MinimalTemplatePreview from "./MinimalTemplatePreview";
 import * as Yup from 'yup';
 import { RootState, useDispatch, useSelector } from "../../../redux-persist/store";
@@ -12,9 +12,9 @@ import { getAllTemplates } from "../../../redux-persist/slices/getAllTemplates";
 import { mediaFileSave } from "../../../redux-persist/slices/mediaSave";
 
 type CreateMessageProps = {
-    templateData: Template | undefined;
-    templateCurrData: Template | undefined;
-    setTemplateCurrData: (template: Template) => void;
+    templateData: WabaTemplate | undefined;
+    templateCurrData: WabaTemplate | undefined;
+    setTemplateCurrData: (template: WabaTemplate) => void;
     headerVariableValues: { [variableCount: number]: any };
     setHeaderVariableValues: any;
     bodyVariableValues: { [variableCount: number]: any };
@@ -43,15 +43,16 @@ export const CreateMessage = ({ templateData, templateCurrData, setTemplateCurrD
         (state: RootState) => state.fromNumber
     );
 
-    useEffect(() => {
-        dispatch(getAllTemplates());
-            if(campaignData.whatsAppBusinessId){
-                dispatch(getFromNumber(campaignData.whatsAppBusinessId));
-            }
 
-    }, [dispatch]);
+    //TODO
+    // useEffect(() => {
+    //     //dispatch(getAllTemplates());
+    //         if(campaignData.whatsAppBusinessId){
+    //             dispatch(getFromNumber(campaignData.whatsAppBusinessId));
+    //         }
+
+    // }, [dispatch]);
     
-    console.log(getTemplates);
     console.log(fromNumber);
     console.log(campaignData);
 
@@ -113,22 +114,14 @@ export const CreateMessage = ({ templateData, templateCurrData, setTemplateCurrD
     const resValid = [headerVariableCount, bodyVariableCount].map((count, index) => Array(count).fill("").map((item, idx) => index === 0 ? { ['header' + idx]: Yup.string().required('Required') } : { ['body' + idx]: Yup.string().required('Required') })).flat().reduce((item, accumulator) => ({ ...item, ...accumulator }), {})
     const formik = useFormik({
         initialValues: {
-            from: '',
             ...res
         },
         validationSchema: Yup.object({
-            from: Yup.string().required('Required'),
             ...resValid
         }),
         onSubmit: async (formValues) => {
-            let phoneNumberId;
-            fromNumber.map(key=>
-                {
-                if(key.displayPhoneNumber==formValues.from){
-                    phoneNumberId=key.phoneNumberId;
-                }})
-            let values={"campaignName":campaignData.campaignName,"scheduleTime": campaignData.scheduleTime,"templateId":campaignData.templateId,"templateName" : campaignData.templateName,"language":campaignData.language,"toContacts" :campaignData.toContacts,
-        "from": formValues.from,"whatsAppBusinessId":campaignData.whatsAppBusinessId,"phoneNumberId":phoneNumberId,"variables" :formValues
+            let values={"campaignName":campaignData.campaignName,"scheduleTime": campaignData.scheduleTime,"templateName" : campaignData.templateName,"language":campaignData.language,"toContacts" :campaignData.toContacts,
+        "from": "","whatsAppBusinessId":campaignData.whatsAppBusinessId,"phoneNumberId":"","variables" :formValues
         }
         dispatch(getCampaignName(values)); 
         setActiveStep(activeStep + 1)
@@ -152,26 +145,8 @@ export const CreateMessage = ({ templateData, templateCurrData, setTemplateCurrD
     return <>
         <Grid mt={5} container minHeight={550}>
             <Grid lg={9} xs={12} item>
-                <Label for="exampleSelect">From</Label>
 
                 <Form onSubmit={formik.handleSubmit}>
-                    <div className="mb-4">
-                        <Input type="select" name="from" id="from"
-                            onChange={formik.handleChange}
-                            value={formik.values.from}
-                            invalid={formik.touched.from && formik.errors.from ? true : false}
-                            placeholder="Select 'From' number">
-                            {formik.touched.from && formik.errors.from ? (
-                                <FormFeedback type="invalid">{formik.errors.from}</FormFeedback>
-                            ) : null}
-                            <option value="">Select 'From' number</option>
-                            {
-                                fromNumber?.map(key=>
-                            <>
-                            <option key={key.displayPhoneNumber} value={key.displayPhoneNumber}>{key.displayPhoneNumber}</option>
-                            </>)}
-                        </Input>
-                    </div>
                     {templateCurrData?.components.map(template =>
                         <div>
                             {template.type == 'HEADER' &&

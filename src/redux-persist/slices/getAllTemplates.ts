@@ -10,41 +10,13 @@ import URLConstants from '../../constants/urlConstants';
 type GetTemplatesState = {
     isLoading: boolean;
     error: boolean;
-    getTemplates: GetTemplatesType[];
+    getTemplates: GetTemplatesType;
 }
 
 const initialState: GetTemplatesState = {
     isLoading: false,
     error: false,
-    getTemplates: [
-        {
-            whatsAppBusinessId: '',
-            accountId: '',
-            displayName: '',
-            businessAccountId: '',
-            templates: [
-                {
-                    name: '',
-                    language: '',
-                    status: '',
-                    category: '',
-                    id: '',
-                    components: [
-                        {
-                            type: '',
-                            format: '',
-                            text: '',
-                            buttons: [{
-                                type: '',
-                                text: '',
-                                phone_number: '',
-                                url: '',
-                            }]
-                        }
-                    ]
-                }],
-        },
-    ]
+    getTemplates: {} as GetTemplatesType
 
 
 }
@@ -76,11 +48,12 @@ const slice = createSlice({
 export default slice.reducer;
 
 
-export function getAllTemplates() {
+export function getAllTemplates(whatsAppBusinessId:string) {
+    var params={"whatsAppBusinessId":whatsAppBusinessId}
     return async () => {
         dispatch(slice.actions.startLoading());
         try {
-            const response = await axios.get(URLConstants.GET_TEMPLATES_BASE_URL,);
+            const response = await axios.get(URLConstants.GET_TEMPLATES_BASE_URL,{params});
             dispatch(slice.actions.getTemplatesSuccess(response.data.data));
         } catch (error) {
             dispatch(slice.actions.hasError(error));

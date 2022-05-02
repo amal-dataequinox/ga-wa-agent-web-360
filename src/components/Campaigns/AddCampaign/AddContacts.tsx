@@ -53,7 +53,7 @@ export const AddContacts = (props: AddContactProps) => {
 
     const dispatch = useDispatch();
     useEffect(() => {
-        dispatch(getAllTemplates());
+       // dispatch(getAllTemplates());
         dispatch(getAllContacts(1));
     }, [dispatch]);
     const fileTypes = ["CSV", "XLSX"];
@@ -86,7 +86,7 @@ export const AddContacts = (props: AddContactProps) => {
             var fileExtension = fileName.split('.').pop();
             // alert(fileExtension);
             fileReader.onload = function (event) {
-                const text = event.target.result;
+                const text = event?.target?.result;
                 if (fileExtension == 'csv') {
                     csvFileToArray(text);
                 }
@@ -138,7 +138,7 @@ export const AddContacts = (props: AddContactProps) => {
         const reader = new FileReader();
         reader.onload = (evt) => {
             /* Parse data */
-            const bstr = evt.target.result;
+            const bstr = evt?.target?.result;
             const wb = XLSX.read(bstr, { type: 'binary' });
             /* Get first worksheet */
             const wsname = wb.SheetNames[0];
@@ -160,14 +160,14 @@ export const AddContacts = (props: AddContactProps) => {
                 toContacts.push(contact.contactPhoneNumber)
             })
             
-            let values = { "campaignName": campaignData.campaignName, "scheduleTime": campaignData.scheduleTime, "templateId": campaignData.templateId, "templateName": campaignData.templateName,"language":campaignData.language,"whatsAppBusinessId":campaignData.whatsAppBusinessId, "toContacts": toContacts }
+            let values = { "campaignName": campaignData.campaignName, "scheduleTime": campaignData.scheduleTime,"templateName": campaignData.templateName,"language":campaignData.language,"whatsAppBusinessId":campaignData.whatsAppBusinessId, "toContacts": toContacts }
             dispatch(getCampaignName(values));
         }
         if (arrayContacts.length > 0) {
             arrayContacts.map(contact => {
                 toContacts.push(contact.mobileNumber.trim())
             })
-            let values = { "campaignName": campaignData.campaignName, "scheduleTime": campaignData.scheduleTime, "templateId": campaignData.templateId, "templateName": campaignData.templateName,"language":campaignData.language,"whatsAppBusinessId":campaignData.whatsAppBusinessId, "toContacts": toContacts }
+            let values = { "campaignName": campaignData.campaignName, "scheduleTime": campaignData.scheduleTime,"templateName": campaignData.templateName,"language":campaignData.language,"whatsAppBusinessId":campaignData.whatsAppBusinessId, "toContacts": toContacts }
             dispatch(getCampaignName(values));
         }
         setActiveStep(activeStep + 1)

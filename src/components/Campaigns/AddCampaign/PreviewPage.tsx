@@ -2,14 +2,14 @@ import { Box, Card, Divider, Grid } from "@material-ui/core"
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { Button } from "reactstrap";
-import { Component, Template } from "../../../@types/getTemplatesType"
+import { Component, WabaTemplate } from "../../../@types/getTemplatesType"
 import { getCampaignName } from "../../../redux-persist/slices/campaignData";
 import { sendNewCampaign } from "../../../redux-persist/slices/sentCampaign";
 import { RootState, useDispatch, useSelector } from "../../../redux-persist/store";
 import MinimalTemplatePreview from "./MinimalTemplatePreview"
 
 type PreviewPageProps = {
-    templateCurrData: Template | undefined;
+    templateCurrData: WabaTemplate | undefined;
     setActiveStep: (num: number) => void;
     activeStep: number;
     showBroadcastSection: () => void;

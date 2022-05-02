@@ -13,7 +13,7 @@ import Multiselect from 'multiselect-react-dropdown';
 
 
 import { createGroup } from "../../../redux/actions";
-import { Template } from '../../../@types/getTemplatesType';
+import { WabaTemplate } from '../../../@types/getTemplatesType';
 import { getAllContacts } from '../../../redux-persist/slices/allContacts';
 import { AllContacts } from '../../../@types/allContacts';
 import { sendNewMessage } from '../../../redux-persist/slices/sendMessage';
@@ -21,15 +21,19 @@ import Scrollbar from "simplebar-react";
 import {AddCampaign} from '../../../components/Campaigns/AddCampaign';
 import { CampaignHistoryItem , CampaignHistory} from '../../../components/Campaigns/ShowCampaign';
 import { getCampaignList } from '../../../redux-persist/slices/campaignList';
-import { getFromNumber } from '../../../redux-persist/slices/fromNumber';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useSnackbar } from 'notistack';
 import { mediaFileSave } from '../../../redux-persist/slices/mediaSave';
+import { getAllWBAccount } from '../../../redux-persist/slices/getWBAccounts';
 
 const Broadcast = (props: any) => {
     const { enqueueSnackbar } = useSnackbar();
     const dispatch = useDispatch();
+
+    const { getWBAccount } = useSelector(
+        (state: RootState) => state.getWBAccount
+    );
     const { getTemplates } = useSelector(
         (state: RootState) => state.getTemplates
     );
@@ -46,9 +50,7 @@ const Broadcast = (props: any) => {
         (state: RootState) => state.campaignList
     );
 
-    const { fromNumber } = useSelector(
-        (state: RootState) => state.fromNumber
-    );
+  
     const { customer } = useSelector(
         (state: RootState) => state.customer
     );
@@ -58,10 +60,17 @@ const Broadcast = (props: any) => {
     );
 
     useEffect(() => {
-        dispatch(getAllTemplates());
+        dispatch(getAllWBAccount());
         dispatch(getAllContacts(1));
         dispatch(getCampaignList(1,10));
     }, [dispatch]);
+
+    useEffect(() => {
+        if (getWBAccount[0].whatsAppBusinessId) {
+            setWhatsAppBusinessId(getWBAccount[0].whatsAppBusinessId)
+            dispatch(getAllTemplates(getWBAccount[0].whatsAppBusinessId));
+        }
+    }, [getWBAccount[0].whatsAppBusinessId]);
 
     // State for current active Tab
     const [currentActiveTab, setCurrentActiveTab] = useState('1');
@@ -70,7 +79,7 @@ const Broadcast = (props: any) => {
     const [templateDetailsModal, setTemplateDetailsModal] = useState(false);
     const [templateVariableModal, setTemplateVariableModal] = useState(false);
     const [alert, setAlert] = useState(true);
-    const [templateData, setTemplateData] = useState<Template>();
+    const [templateData, setTemplateData] = useState<WabaTemplate>();
     const [bodyText, setBodyText] = useState<string>();
     const [bodyVariable1, setBodyVariable1] = useState('');
     const [bodyVariable2, setBodyVariable2] = useState('');
@@ -107,15 +116,13 @@ const Broadcast = (props: any) => {
 
     const toggleTemplates = () => {
         setTemplatesModal(!templatesModal);
-        formik.values.from=""
     }
 
     const toggleTemplatesDetails = () => {
         setTemplateDetailsModal(!templateDetailsModal);
-        formik.values.from=""
 
     }
-    const setTemplateDetails = (template: Template) => {
+    const setTemplateDetails = (template: WabaTemplate) => {
         setTemplateData(template);
     }
 
@@ -124,24 +131,6 @@ const Broadcast = (props: any) => {
 
     }
 
-    const getFromNumberValue = (whatsAppBusinessId:string) => {
-        setWhatsAppBusinessId(whatsAppBusinessId)
-        dispatch(getFromNumber(whatsAppBusinessId));
-    }
-
-
-    // var bodyVariableCount: number | undefined;
-    // var headerVariableCount: number | undefined;
-    // templateData?.components.map(data => {
-    //     if (data.type == 'HEADER') {
-    //         let value = data.text?.split('{{').length;
-    //         headerVariableCount = value ? value - 1 : 0;
-    //     }
-    //     if (data.type == 'BODY') {
-    //         let value = data.text?.split('{{').length;
-    //         bodyVariableCount = value ? value - 1 : 0;
-    //     }
-    // })
 
     const headerVariableCount = templateData?.components.find((component) => component.type === "HEADER")?.text?.match(/{{[0-9]+}}/g)?.length || 0;
     const bodyVariableCount = templateData?.components.find((component) => component.type === "BODY")?.text?.match(/{{[0-9]+}}/g)?.length || 0;
@@ -154,8 +143,6 @@ const Broadcast = (props: any) => {
 
     const onRemoveNewUsers = (selectedList: any, selectedItem: string[]) => {
         setContact(selectedList);
-        setSingleSelect(false);
-
     }
 
     const { t } = props;
@@ -366,21 +353,14 @@ const Broadcast = (props: any) => {
     const formik = useFormik({
         initialValues: {
             to: '',
-            from: '',
             ...res
         },
         validationSchema: Yup.object({
             to: Yup.array().required('Required'),
-            from: Yup.string().required('Required'),
             ...resValid
         }),
         onSubmit: async (formValues) => {
             let phoneNumberId ="";
-            fromNumber.map(key=>
-                {
-                if(key.displayPhoneNumber==formValues.from){
-                    phoneNumberId=key.phoneNumberId;
-                }})
 
                 if (headerVariableCount == 0) {
                     Object.assign(header, null)
@@ -412,10 +392,9 @@ const Broadcast = (props: any) => {
                 }
                 let type = "template";
                 let templateName = templateData?.name;
-                let templateId = templateData?.id;
                 let language = templateData?.language;
         
-                const res =   await  dispatch(sendNewMessage(to,formValues.from, type, templateName, templateId,whatsAppBusinessId,phoneNumberId, language, body, header));
+                const res =   await  dispatch(sendNewMessage(to,"", type, templateName,whatsAppBusinessId,"", language, body, header));
                 if(res?.hasError){
                     enqueueSnackbar(res?.message, { variant: "error" })
                   }
@@ -445,7 +424,7 @@ const Broadcast = (props: any) => {
                             </Button>
                         </div>
                         <UncontrolledTooltip target="logout" placement="bottom">
-                           Back to beoadcast home
+                           Back to broadcast home
                         </UncontrolledTooltip>
                     </div>}
                     <h4 className="mb-4">{t('Broadcast')}</h4>
@@ -563,7 +542,7 @@ const Broadcast = (props: any) => {
                         </TabPane>
                         <TabPane tabId="2">
 
-                            {getTemplates.length == 0 || getTemplates == null ?
+                            {getTemplates?.waba_templates?.length==0 ?
                                 <div className='row'>
                                     <div className='col-lg-3'>
                                     </div>
@@ -597,35 +576,37 @@ const Broadcast = (props: any) => {
                                                 : null
                                 }
                                             
-                                        {getTemplates.map((row) => (
-                                            <div className='pt-20' key={row.whatsAppBusinessId}>
-                                      <h6>{row.displayName}</h6>
-                                                <Table responsive striped bordered hover key={row.whatsAppBusinessId}>
+                                      
+                                            <div className='pt-20'>
+                                      {/* <h6>{row.displayName}</h6> */}
+                                                    <Table responsive striped bordered hover >
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Name</th>
+                                                                <th>Language</th>
+                                                                <th>Status</th>
+                                                                <th>Category</th>
+
+
+                                                            </tr>
+                                                        </thead>
+                                                       
+                                                            <tbody >
+                                                            {getTemplates?.waba_templates?.map((row, index) => (
+                                                                <tr key={index} onClick={() => (toggleTemplatesDetails(), setTemplateDetails(row))} style={{ cursor: 'pointer' }}>
+                                                                    <td>{index}</td>
+                                                                    <td >{row.name} </td>
+                                                                    <td>{row.language} </td>
+                                                                    <td>{row.status}</td>
+                                                                    <td>{row.category}</td>
+                                                                </tr>
+                                                                    ))}
+                                                            </tbody>
                                                     
-                                                    <thead>
-                                                        <tr>
-                                                            <th>ID</th>
-                                                            <th>Name</th>
-                                                            <th>Language</th>
-                                                            <th>Status</th>
-                                                            <th>Category</th>
-
-
-                                                        </tr>
-                                                    </thead>
-
-                                                    <tbody>
-                                                        {row.templates.map(template => (
-                                                            <tr key={template.id} onClick={() => (toggleTemplatesDetails(),getFromNumberValue(row.whatsAppBusinessId), setTemplateDetails(template))} style={{ cursor: 'pointer' }}>
-                                                                <td>{template.id}</td>
-                                                                <td >{template.name} </td>
-                                                                <td>{template.language} </td>
-                                                                <td>{template.status}</td>
-                                                                <td>{template.category}</td>
-                                                            </tr>))}
-                                                    </tbody>
-                                                </Table>
-                                                </div>))}
+                                                    </Table>
+                                                </div>
                                     </div>
 
                                 </>
@@ -680,24 +661,6 @@ const Broadcast = (props: any) => {
 
               
                 <Form onSubmit={formik.handleSubmit}>
-                    <div className="mb-4">
-                    <Label className="form-label" htmlFor="addcontact-invitemessage-input">From</Label>
-                        <Input type="select" name="from" id="from"
-                            onChange={formik.handleChange}
-                            value={formik.values.from}
-                            invalid={formik.touched.from && formik.errors.from ? true : false}
-                            placeholder="Select 'From' number">
-                            {formik.touched.from && formik.errors.from ? (
-                                <FormFeedback type="invalid">{formik.errors.from}</FormFeedback>
-                            ) : null}
-                            <option value="">Select 'From' number</option>
-                            {
-                                fromNumber?.map(key=>
-                            <>
-                            <option key={key.displayPhoneNumber} value={key.displayPhoneNumber}>{key.displayPhoneNumber}</option>
-                            </>)}
-                        </Input>
-                    </div>
                         <div className="mb-4">
                         <Label className="form-label" htmlFor="addcontact-invitemessage-input">To</Label>
                         <Multiselect options={allContacts}
@@ -715,8 +678,8 @@ const Broadcast = (props: any) => {
                             name="to"
                             selectionLimit={1}
                         />
-                             {formik.touched.from && formik.errors.from ? (
-                                <FormFeedback type="invalid">{formik.errors.from}</FormFeedback>
+                             {formik.touched.to && formik.errors.to ? (
+                                <FormFeedback type="invalid">{formik.errors.to}</FormFeedback>
                             ) : null}
                     </div>
                         {templateData?.components.map(template =>
