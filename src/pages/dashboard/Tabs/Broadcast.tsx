@@ -26,6 +26,8 @@ import * as Yup from 'yup';
 import { useSnackbar } from 'notistack';
 import { mediaFileSave } from '../../../redux-persist/slices/mediaSave';
 import { getAllWBAccount } from '../../../redux-persist/slices/getWBAccounts';
+import { FileUploader } from 'react-drag-drop-files';
+import { fileUploadToS3 } from '../../../redux-persist/slices/fileUpload';
 
 const Broadcast = (props: any) => {
     const { enqueueSnackbar } = useSnackbar();
@@ -57,6 +59,11 @@ const Broadcast = (props: any) => {
 
     const { mediaSave } = useSelector(
         (state: RootState) => state.mediaSave
+    );
+
+    
+    const { fileUpload } = useSelector(
+        (state: RootState) => state.fileUpload
     );
 
     useEffect(() => {
@@ -100,8 +107,11 @@ const Broadcast = (props: any) => {
     const [showCampaignSection , setShowCampaignSection] = useState(false);
     const [createdCampaign,setCreatedCampaigns] = useState();
     const [whatsAppBusinessId,setWhatsAppBusinessId] = useState("");
+    const [s3Url,setS3Url] = useState("");
     
     const headerData = templateData?.components.find(( type ) => type.type === "HEADER");
+    const buttonData = templateData?.components.find(( type ) => type.type === "BUTTONS");
+console.log(buttonData);
 
 
     // Toggle active state for Tab
@@ -120,10 +130,23 @@ const Broadcast = (props: any) => {
 
     const toggleTemplatesDetails = () => {
         setTemplateDetailsModal(!templateDetailsModal);
-
+    
     }
     const setTemplateDetails = (template: WabaTemplate) => {
         setTemplateData(template);
+        bodyParameters = [];
+        headerParameters = [];
+        bodyVariable1Data="";
+        bodyVariable2Data="";
+        bodyVariable3Data="";
+        bodyVariable4Data="";
+        bodyVariable5Data="";
+        bodyVariable6Data="";
+        headerVariable1Data="";
+        headerVariable2Data="";
+        headerVariable3Data="";
+        headerVariable4Data="";
+        headerVariable5Data="";
     }
 
     const toggleTemplatesVariable = () => {
@@ -378,14 +401,60 @@ const Broadcast = (props: any) => {
                 }
            
                 if(headerData?.format === "IMAGE"){
-                    let headerImageLink = [{
-                         type: 'image',
-                         image:{
-                             "link":mediaSave?.url
-                         } 
-                     }]
-                     Object.assign(header, { "parameters": headerImageLink })
+                  if(headerData?.example){
+                    let headerMediaLink = [{
+                        type: 'image',
+                        image:{
+                            "link":mediaSave?.url
+                        } 
+                    }]
+                    Object.assign(header, { "parameters": headerMediaLink })
+                  }
+                  else{
+                    let headerMediaLink = [{
+                        type: 'image',
+                        image:{
+                            "link":s3Url
+                        } 
+                    }]
+                    Object.assign(header, { "parameters": headerMediaLink })
+                  }
                  }
+
+                 if(headerData?.format === "VIDEO"){
+                    if(headerData?.example){
+                      let headerMediaLink = [{
+                          type: 'video',
+                          video:{
+                              "link":mediaSave?.url
+                          } 
+                      }]
+                      Object.assign(header, { "parameters": headerMediaLink })
+                    }
+                    else{
+                      let headerMediaLink = [{
+                          type: 'video',
+                          video:{
+                              "link":s3Url
+                          } 
+                      }]
+                      Object.assign(header, { "parameters": headerMediaLink })
+                    }
+                 
+                   }
+                   
+                   if(headerData?.format === "DOCUMENT"){
+                    
+                      let headerMediaLink = [{
+                          type: 'document',
+                          document:{
+                              "link":s3Url
+                          } 
+                      }]
+                      Object.assign(header, { "parameters": headerMediaLink })
+                   }
+
+
                 let to;
                 if (contact) {
                     to = contact
@@ -393,7 +462,6 @@ const Broadcast = (props: any) => {
                 let type = "template";
                 let templateName = templateData?.name;
                 let language = templateData?.language;
-        
                 const res =   await  dispatch(sendNewMessage(to,"", type, templateName,whatsAppBusinessId,"", language, body, header));
                 if(res?.hasError){
                     enqueueSnackbar(res?.message, { variant: "error" })
@@ -406,6 +474,25 @@ const Broadcast = (props: any) => {
     
         }
     });
+
+    const fileImageTypes = ["JPG", "PNG", "GIF"];
+    const fileVideoTypes = ["MP4", "AVI", "MKV"];
+    const fileDocumentTypes = ["PDF", "DOC"];
+
+    const mediaFileUpload = async (event: any) => {
+        let file =event;
+            if (file) {
+                let res = await dispatch(fileUploadToS3(whatsAppBusinessId, file));
+                if (res?.hasError) {
+                    enqueueSnackbar(res?.message, { variant: "error" })
+                }
+                else {
+                    console.log(res?.url);
+                    setS3Url(res?.url)
+                }
+            }
+    }
+
     return (
         <React.Fragment>
             <Scrollbar style={{minHeight : "100vh"}}>
@@ -636,6 +723,15 @@ const Broadcast = (props: any) => {
                                     <Label className="form-label" htmlFor="addcontact-invitemessage-input">Body</Label>
                                     <textarea id='body' disabled contentEditable={false} style={{ background: '#f3f1f1bf' }} className="form-control" value={template.text} rows={10}></textarea>
                                 </div>}
+                                {template.type == 'BUTTONS' &&
+                                <div className="mb-4">
+                                    <Label className="form-label" htmlFor="addcontact-invitemessage-input">Buttons</Label>
+                                   <div>
+                                   {template?.buttons.map(button=>
+                                    <Button color="primary" disabled block className="margin-right waves-effect waves-light">{button.text}</Button>
+                                    )}
+                                       </div> 
+                                </div>}
                             {template.type == 'FOOTER' &&
                                 <div className="mb-4">
                                     <Label className="form-label" htmlFor="addcontact-invitemessage-input">Footer</Label>
@@ -684,24 +780,30 @@ const Broadcast = (props: any) => {
                     </div>
                         {templateData?.components.map(template =>
                         <div>
-                            {template.type == 'HEADER' &&
-                                <div className="mb-4">
-                                    <Label className="form-label" htmlFor="addcontactemail-input">Header</Label>
-                                    <Input disabled type="text" contentEditable={false} style={{ background: '#f3f1f1bf' }} className="form-control" id="addcontactemail-input" value={template.text} />
+                                {template.type == 'HEADER' &&
+                                    <div className="mb-4">
+                                        <Label className="form-label" htmlFor="addcontactemail-input">Header</Label>
+                                        {template.format == 'IMAGE' || template.format == 'VIDEO' || template.format == 'DOCUMENT'?
+                                            <div className='full-width-file-upload'>
+                                                <FileUploader
+                                                    handleChange={mediaFileUpload}
+                                                    name="file"
+                                                    types={template.format == 'IMAGE' ? fileImageTypes : template.format == 'VIDEO'? fileVideoTypes : fileDocumentTypes}
+                                                />
+                                                 {/* <Input type="file" name="file" id="fileUpload" onChange={mediaFileUpload}/> */}
+                                            </div>
+                                            : <><Input disabled type="text" contentEditable={false} style={{ background: '#f3f1f1bf' }} className="form-control" id="addcontactemail-input" value={template.text} /><>
+                                                {new Array(headerVariableCount).fill('x').map((row, key) => <div className="mb-4 pt-20">
+                                                    <Label className="form-label">Variable {key + 1}</Label>
+                                                    <Input type="text" className="form-control" id={key.toString()} name={"header" + key} onChange={(e) => handleHeaderVariables(e, (key + 1))}
+                                                        invalid={formik.touched['header' + key] && formik.errors['header' + key] ? true : false} />
+                                                    {formik.touched['header' + key] && formik.errors['header' + key] ? (
+                                                        <FormFeedback type="invalid">{formik.errors['header' + key]}</FormFeedback>
+                                                    ) : null}
+                                                </div>
 
-                                    {new Array(headerVariableCount).fill('x').map((row, key) =>
-                                        <div className="mb-4 pt-20">
-                                            <Label className="form-label" >Variable {key + 1}</Label>
-                                            <Input type="text"  className="form-control" id={key.toString()} name={"header" + key} onChange={(e) => handleHeaderVariables(e, (key + 1))} 
-                                            invalid={formik.touched['header' + key] && formik.errors['header' + key] ? true : false}
-                                            />
-                                            {formik.touched['header' + key] && formik.errors['header' + key] ? (
-                                                <FormFeedback type="invalid">{formik.errors['header' + key]}</FormFeedback>
-                                            ) : null}
-                                        </div>
-                                        
-                                    )}
-                                </div>}
+                                                )}</></>}
+                                    </div>}
                                 {template.type == 'BODY' &&
                                 <div className="mb-4">
                                     <Label className="form-label" htmlFor="addcontact-invitemessage-input">Body</Label>
@@ -719,7 +821,15 @@ const Broadcast = (props: any) => {
                                     )}
                                 </div>
                             }
-
+                                {template.type == 'BUTTONS' &&
+                                    <div className="mb-4">
+                                        <Label className="form-label" htmlFor="addcontact-invitemessage-input">Buttons</Label>
+                                        <div>
+                                            {template?.buttons.map(button =>
+                                                <Button color="primary" block className="margin-right waves-effect waves-light">{button.text}</Button>
+                                            )}
+                                        </div>
+                                    </div>}
 
                             {template.type == 'FOOTER' &&
                                 <div className="mb-4">

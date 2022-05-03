@@ -29,6 +29,7 @@ import campaignStatsReducer from './slices/campaignStats';
 import chatList from './slices/chatList';
 import mediaSaveReducer from './slices/mediaSave';
 import conversationTagsReducer from './slices/ConversationTags';
+import fileUploadReducer from './slices/fileUpload';
 
 // ----------------------------------------------------------------------
 
@@ -73,6 +74,7 @@ const rootReducer = combineReducers({
   campaignStats:campaignStatsReducer,
   mediaSave:mediaSaveReducer,
   conversationTags:conversationTagsReducer,
+  fileUpload:fileUploadReducer
 });
 
 export { rootPersistConfig, rootReducer };
