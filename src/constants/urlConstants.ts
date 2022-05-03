@@ -74,7 +74,9 @@ export default class URLConstants {
   
   //GAMS URLs
   static SAVE_MEDIA_BASE_URL: string = URLConstants.GAMS_BASE_URL + "/adapter/files/save";
-  static UPLOAD_FILE_BASE_URL: string = URLConstants.GAMS_BASE_URL + "/adapter/files/upload";
+
+  //TODO
+  static UPLOAD_FILE_BASE_URL: string = "http://3.110.254.209:5009/adapter/files/upload";
 
   static SEND_MESSAGE_BASE_URL: string = URLConstants.G_360_BASE_URL + "/whatsapp/templates/message";
   static SEND_CAMPAIGN_BASE_URL: string = URLConstants.G_360_BASE_URL + "/whatsapp/campaign";
